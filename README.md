@@ -54,7 +54,7 @@ $ docker-compose up
 
 ## Run
 
-- Once the containers are up & running successfully got to your browser to open the HTML page: [http://localhost:5000](http://localhost:5000).
+- Once the containers are up & running successfully got to your browser to open the HTML page: [http://localhost:5000](http://localhost:5000)
 
 - The page will driect you to Github consent webpage. Upong succesfful authentication Github will direct to applicaiton home page which displays the required informaiton.
 
