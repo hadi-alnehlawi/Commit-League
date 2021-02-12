@@ -1,0 +1,5 @@
+venv
+.vscode
+.DS_Store
+.pytest_cache
+.gitingore
