@@ -16,7 +16,7 @@ Most active period
 
 Requests to the Github API made by the application must be authenticated using OAuth2 token.
 
-## Desing
+## Design
 
 The solution based on the idea of requesting data from Githib API and deserializing the josn responses into OOP object and doing the processing on run-time.
 
