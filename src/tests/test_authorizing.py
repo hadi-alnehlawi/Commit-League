@@ -1,6 +1,6 @@
 from flask_dance.consumer.storage import MemoryStorage
 from app import app, github_bp
-import json
+import json, os
 
 
 def test_index_unauthorized(monkeypatch):
@@ -17,8 +17,9 @@ def test_index_unauthorized(monkeypatch):
 def test_index_authorized(monkeypatch):
     # get the access token from runnin the applicatin to access GITHUB_OAUTH_CLIENT_ID
     # it will be written on stdout
-    fake_token = "2079edddcd69a3173322ff1963755a3f3d58cd3e"
-    storage = MemoryStorage({"access_token": f"{fake_token}"})
+    # ex: 2079edddcd69a3173322ff1963755a3f3d58cd3e"
+    FAKE_TOKEN = os.environ.get("FAKE_TOKEN", "supersekrit")
+    storage = MemoryStorage({"access_token": f"{FAKE_TOKEN}"})
     monkeypatch.setattr(github_bp, "storage", storage)
 
     with app.test_client() as client:
