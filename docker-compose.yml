@@ -8,23 +8,15 @@ services:
     env_file:
       ./src/env/db.env
     container_name: db_commitleague
-    # volumes:
-    #   - ./src/env:/home/env
-    # # entrypoint:  bash -c "chmod 755 /home/env/*"
-    # # # && /home/env/setupdb.sh"
-    
+
   commitleague:
     build: .
     image: commitleague
     env_file:
       ./src/env/api.env
     container_name: commitleague
-    volumes:
-      - ./code
     ports:
       - 5000:5000
-    command:  /bin/bash -c "chmod 755 /code/* && ./wait-for-it.sh -t 0 db:5432 -- &&  echo 'postgres is ready' && flask db upgrade && flask run --host=0.0.0.0"
-    # command: /bin/bash -c "chmod 755 /code/* && flask db upgrade && flask run --host=0.0.0.0"
-    # command: python app.py
+    command: /bin/bash -c "chmod 755 /code/* && ./wait-for-it.sh -t 0 db:5432 -- &&  echo 'postgres is ready' && flask db upgrade && flask run --host=0.0.0.0"
     depends_on:
       - db

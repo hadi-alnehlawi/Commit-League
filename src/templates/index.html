@@ -89,8 +89,6 @@
         return $(cardTemplate.join(''));
     }
 
-    // var pagesNumbers = $();
-
 
     // //Convert data into html cards 
     function LoadData(Data) {
@@ -102,18 +100,6 @@
         return cards;
     }
 
-
-    // function LoadPages(pagesCount) {
-    //     var i;
-    //     for (i = 1; i <= pagesCount; i++) {
-    //         pagesNumbers = pagesNumbers.add(CreatePageNumber(i));
-    //     }
-    // }
-
-
-    // var data;
-    // var totalPages;
-    // const pageSize = 5;
     function Intialize() {
         $('#ContributorList').empty();
         var settings = {
@@ -123,6 +109,7 @@
         "async": true
         };
         $.ajax(settings).done(function (response) {
+            console.log(response.statusCode);
             // enable logout btn
             document.getElementById("btnlogout").disabled = false;
             // hide the spinner
@@ -146,7 +133,9 @@
             });
         });
         SubscribetoCollapse();
-
+        })
+        .fail(function() {
+            console.log("forbidded call");
         });
     }
 

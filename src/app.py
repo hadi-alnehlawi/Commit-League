@@ -63,9 +63,10 @@ def create_app():
     @authorizing
     def contributors_endpoint():
         resp_repo = github.get(url)
-        if resp_repo.status_code == 400:
-            abort(400)
-        elif resp_repo.status_code == 403:
+        resp_contrbtor = github.get(url+"/contributors")
+        if resp_repo.status_code == 404:
+            abort(404)
+        elif resp_contrbtor.status_code == 403:
             abort(403)
         else:
             query_string = request.query_string
