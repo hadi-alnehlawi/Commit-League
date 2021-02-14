@@ -2,7 +2,7 @@ import os, json
 from requests import request as req
 from flask import Flask, redirect, url_for, jsonify, abort, request, render_template, session
 from flask_dance.contrib.github import make_github_blueprint, github
-from mapping import Repo, Contributor
+from mapping import Repo, Contributor, Repository
 from functools import wraps
 from model import setup_db
 import datetime
@@ -45,13 +45,12 @@ def create_app():
         return jsonify({"success": True, "body": body})
 
     def get_one_contributor(login):
-        contributor_url = url + "/stats/contributors"
-        contributor_resp = github.get(contributor_url)
-        if contributor_resp.status_code == 400:
+        # contributor_url = url + "/stats/contributors"
+        # contributor_resp = github.get(contributor_url)
+        if Repository.get_contribtuor_res().status_code == 400:
             abort(400)
         else:
-            contributor = Contributor(login=login,
-                                      payload=contributor_resp.json())
+            contributor = Contributor(login=login, load_stats=True)
             return jsonify({"success": True, "body": contributor.to_dict()})
 
     @app.route("/")
@@ -62,18 +61,17 @@ def create_app():
     @app.route("/contributors")
     @authorizing
     def contributors_endpoint():
-        resp_repo = github.get(url)
-        resp_contrbtor = github.get(url+"/contributors")
-        if resp_repo.status_code == 404:
+        # resp_repo = github.get(url)
+        # resp_contrbtor = github.get(url+"/contributors")
+        repo = Repo()
+        if Repository.get_contribtuor_res().status_code == 404:
             abort(404)
-        elif resp_contrbtor.status_code == 403:
+        elif Repository.get_contribtuor_res().status_code == 403:
             abort(403)
         else:
             query_string = request.query_string
             if not query_string:
                 # no query string
-                repo_json = resp_repo.json()
-                repo = Repo(url=url, payload=repo_json)
                 return get_all_contributors(repo)
             else:
                 # get login of query string
