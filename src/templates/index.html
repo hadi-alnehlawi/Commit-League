@@ -19,12 +19,13 @@
 </head>
 
 <body>
-    <div class="loader">
+    <div class="loader text-primary" id="loader-main">
         <div class="inner one"></div>
         <div class="inner two"></div>
         <div class="inner three"></div>
     </div>
-      
+
+
     <nav class="navbar fixed-top navbar-light bg-light">
        <h1 class="repo"></h1>
        <button id="btnlogout" disabled="true" onclick="logout_click()" class="btn btn-primary my-2 my-sm-0">Log out</button>
@@ -71,7 +72,10 @@
             'More Details</a></div>',
             '</div>',
             '<div class="collapse" id="collapseExample', cardData.login, '"><div class="card-body">',
-            '<div id="loading">Loading.....</div></div></div></div>'
+            '<div id="loading">'+ 
+            '<div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div>' +
+            // ' <h5>Loading...</h5>'+
+            '</div></div></div></div></div></div>'
         ];
 
         // a jQuery node
@@ -113,26 +117,25 @@
             // enable logout btn
             document.getElementById("btnlogout").disabled = false;
             // hide the spinner
-            $('.loader').hide();
+            $('#loader-main').hide();
             // load repo full name
             createRepoFullName(response["body"]["full_name"]);      
             data = response["body"]["contributors"];
             var cards;
             cards = LoadData(data);
             $('#ContributorList').append(cards);
-            let listItems = document.querySelectorAll('.pagination li a');
-            console.log(listItems);
-             listItems.forEach((item, index) => {
-            item.addEventListener('click', (event) => {
-                var pageid = event.currentTarget.innerHTML;
-                cards = LoadData(data.slice(6,10));
-                console.log(cards);
-                // $('#ContributorList').empty();
-                $('#ContributorList').append(cards);
-                SubscribetoCollapse();
-            });
-        });
-        SubscribetoCollapse();
+            // let listItems = document.querySelectorAll('.pagination li a');
+            // console.log(listItems);
+        //     listItems.forEach((item, index) => {
+        //         item.addEventListener('click', (event) => {
+        //             var pageid = event.currentTarget.innerHTML;
+        //             cards = LoadData(data.slice(6,10));
+        //             console.log(cards);
+        //             $('#ContributorList').append(cards);
+        //             SubscribetoCollapse();
+        //         });
+        // });
+            SubscribetoCollapse();
         })
         .fail(function() {
             console.log("forbidded call");
@@ -157,6 +160,7 @@
             item.addEventListener('click', (event) => {
                 var loginid = event.currentTarget.id;
                 console.log(loginid);
+                console.log("calling localhost:5000/contributors?login=");
                     var settings = {
                     "url": "http://localhost:5000/contributors?login="+loginid,
                     "method": "GET",
