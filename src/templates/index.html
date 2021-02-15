@@ -124,17 +124,6 @@
             var cards;
             cards = LoadData(data);
             $('#ContributorList').append(cards);
-            // let listItems = document.querySelectorAll('.pagination li a');
-            // console.log(listItems);
-        //     listItems.forEach((item, index) => {
-        //         item.addEventListener('click', (event) => {
-        //             var pageid = event.currentTarget.innerHTML;
-        //             cards = LoadData(data.slice(6,10));
-        //             console.log(cards);
-        //             $('#ContributorList').append(cards);
-        //             SubscribetoCollapse();
-        //         });
-        // });
             SubscribetoCollapse();
         })
         .fail(function() {
