@@ -2,7 +2,10 @@ import os, json
 from requests import request as req
 from flask import Flask, redirect, url_for, jsonify, abort, request, render_template, session
 from flask_dance.contrib.github import make_github_blueprint, github
-from mapping import Repo, Contributor, Repository
+# from mapping import Repo, Contributor, Repository
+from mapping.Repository import Repository
+from mapping.Contributor import Contributor
+from mapping.Repo import Repo
 from functools import wraps
 from model import setup_db
 import datetime

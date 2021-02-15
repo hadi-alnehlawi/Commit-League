@@ -1,28 +1,6 @@
 from flask_dance.contrib.github import github
-from flask import jsonify
-import time, operator
-import datetime, os
-
-
-class Repository():
-    repo = os.environ.get("REPOSITORY")
-    owner = os.environ.get("OWNER")
-    repo_url = "repos" + f"/{owner}/{repo}"
-    contribtuor_ul = repo_url + "/contributors"
-    stats_url = repo_url + "/stats/contributors"
-    commits_url = repo_url + f"/commits"
-
-    @classmethod
-    def get_repo_res(cls):
-        return github.get(cls.repo_url)
-
-    @classmethod
-    def get_contribtuor_res(cls):
-        return github.get(cls.contribtuor_ul)
-
-    @classmethod
-    def get_stats_res(cls):
-        return github.get(cls.stats_url)
+import datetime, time, operator
+from mapping.Repository import Repository
 
 
 class Contributor():
@@ -34,10 +12,10 @@ class Contributor():
                  payload=None,
                  last_commit_date=None,
                  first_commit_date=None,
-                 avg_additions=None,
-                 avg_deletions=None,
-                 avg_commits=None,
-                 active_week=None,
+                 avg_additions="N/A",
+                 avg_deletions="N/A",
+                 avg_commits="N/A",
+                 active_week="N/A",
                  load_stats=None):
         self.login = login
         self.total = total
@@ -88,8 +66,8 @@ class Contributor():
             for item in commits_resp.json():
                 date = item["commit"]["author"]["date"]
                 weeks.append(date)
-            self.last_commit_date = max(weeks)
-            self.first_commit_date = min(weeks)
+            self.last_commit_date = max(weeks) if weeks else None
+            self.first_commit_date = min(weeks) if weeks else None
             # get any item from list and extract the first day of week for these commits as an acitve
             commit_date_dt = datetime.datetime.strptime(
                 self.first_commit_date, '%Y-%m-%dT%H:%M:%SZ')
@@ -193,49 +171,3 @@ class Contributor():
             "avg_commits": self.avg_commits,
             "active_week": active_week
         }
-
-
-class Repo():
-    def __init__(self, id=None, num_contributors=None, full_name=None):
-        self.id = id
-        self.num_contributors = num_contributors
-        self.full_name = full_name
-        self.contributors = []
-        self.set_properties()
-
-    def to_dict(self):
-        return {
-            "full_name":
-            self.full_name,
-            "contributors":
-            [contributor.to_dict_repo() for contributor in self.contributors]
-        }
-
-    def set_properties(self):
-        '''
-        GitHub identifies contributors by author email address.
-        This endpoint groups contribution counts by GitHub user,
-        which includes all associated email addresses.
-        To improve performance, only the first 500 author email addresses in the repository link to GitHub users.
-        '''
-        payload = Repository.get_repo_res().json()
-        self.id = payload.get("id")
-        self.full_name = payload.get("full_name")
-
-        for page in range(1, 10):
-            url = Repository.contribtuor_ul + f"?per_page=100&page={page}"
-            resp_contributors = github.get(url)
-            # The history or contributor list is too large to list contributors for this repository via the API
-            if resp_contributors.status_code != 403 or resp_contributors.json(
-            ):
-                self.set_contributors(payload=resp_contributors.json())
-            else:
-                break
-        self.num_contributors = len(self.contributors)
-
-    def set_contributors(self, payload):
-        for contributor in payload:
-            login = contributor.get("login")
-            contributions = contributor.get("contributions")
-            contributor = Contributor(login=login, contributions=contributions)
-            self.contributors.append(contributor)
