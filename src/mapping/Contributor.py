@@ -37,6 +37,8 @@ class Contributor():
                 # iterate on contirbutor week data
                 self.total = item["total"]
                 actvties = self.parse_activity(item["weeks"])
+                break
+
         if actvties:
             # last_commit_date
             last_week = actvties["last_week"]
@@ -66,13 +68,18 @@ class Contributor():
             for item in commits_resp.json():
                 date = item["commit"]["author"]["date"]
                 weeks.append(date)
-            self.last_commit_date = max(weeks) if weeks else None
-            self.first_commit_date = min(weeks) if weeks else None
-            # get any item from list and extract the first day of week for these commits as an acitve
-            commit_date_dt = datetime.datetime.strptime(
-                self.first_commit_date, '%Y-%m-%dT%H:%M:%SZ')
-            self.active_week = commit_date_dt - datetime.timedelta(
-                days=commit_date_dt.weekday())
+            if weeks:
+                self.last_commit_date = max(weeks)
+                self.first_commit_date = min(weeks)
+                # get any item from list and extract the first day of week for these commits as an acitve
+                commit_date_dt = datetime.datetime.strptime(
+                    self.first_commit_date, '%Y-%m-%dT%H:%M:%SZ')
+                self.active_week = commit_date_dt - datetime.timedelta(
+                    days=commit_date_dt.weekday())
+            else:
+                self.last_commit_date = None
+                self.first_commit_date = None
+                self.active_week = None
 
     def parse_activity(self, weeks):
         activities = (0, 0, 0)  # (sum(a), sum(d) , sum(c))
@@ -105,7 +112,7 @@ class Contributor():
         # get next date of week as using >
         last_week_dt -= datetime.timedelta(days=1)
         last_week_str = last_week_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
-        #e.g. /commits??author=mitsuhiko&since=2020-07-05T00:00:00Z
+        #e.g. /commits?author=mitsuhiko&since=2020-07-05T00:00:00Z
         commits_url = Repository.commits_url + f"?author={self.login}&since={last_week_str}"
         commits_resp = github.get(commits_url)
         commits_date = []
@@ -114,7 +121,7 @@ class Contributor():
             for commit in payload:
                 commit_date = commit["commit"]["author"]["date"]
                 commits_date.append(commit_date)
-        return max(commits_date)
+        return max(commits_date) if commits_date else None
 
     def get_first_commit_date(self, first_week):
         '''
@@ -123,10 +130,13 @@ class Contributor():
         until=Only commits before this date will be returned. This is a timestamp in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ.
         get the time range greater than first week and less than next week
         '''
+        # get previosu date of first week as using since >
         first_week_dt = datetime.datetime.fromtimestamp(first_week)
-        # get previosue date of week as using >
         first_week_dt -= datetime.timedelta(days=1)
+        # get proceed date of first week as using unitl <
         next_week_dt = first_week_dt + datetime.timedelta(days=7)
+        next_week_dt += datetime.timedelta(days=1)
+        # convert to str
         first_week_str = first_week_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
         next_week_str = next_week_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
         # e.g. /commits??author=mitsuhiko&until=2011-02-05T00:00:00Z
@@ -138,36 +148,41 @@ class Contributor():
             for commit in payload:
                 commit_date = commit["commit"]["author"]["date"]
                 commits_date.append(commit_date)
-        return min(commits_date)
+        return min(commits_date) if commits_date else None
 
     def to_dict_repo(self):
         return {"login": self.login, "contributions": self.contributions}
 
     def to_dict(self):
-        active_week = self.active_week
         # convert epoch time to str for fomrat
         # this happens for contritburo who has stats in api otherws will return string already
-        if type(active_week) == int:
-            active_week = datetime.datetime.fromtimestamp(self.active_week)
-        active_week = active_week.strftime("%Y-%m-%d")
-        # 1- convert string to datetime
-        first_commit_date = datetime.datetime.strptime(self.first_commit_date,
-                                                       "%Y-%m-%dT%H:%M:%SZ")
-        last_commit_date = datetime.datetime.strptime(self.last_commit_date,
-                                                      "%Y-%m-%dT%H:%M:%SZ")
-
-        # 2- format datetime
-        first_commit_date = first_commit_date.strftime("%Y-%m-%d")
-        last_commit_date = last_commit_date.strftime("%Y-%m-%d")
+        if self.active_week:
+            if type(self.active_week) == int:
+                self.active_week = datetime.datetime.fromtimestamp(
+                    self.active_week)
+            self.active_week = self.active_week.strftime("%Y-%m-%d")
+        # some contributors have statics but when calling commits it returs []
+        # Therefore cannot determine first and last commit, may be bug in github api
+        # e.g. /commits?author=jab
+        if self.first_commit_date and self.last_commit_date:
+            # 1- convert string to datetime
+            self.first_commit_date = datetime.datetime.strptime(
+                self.first_commit_date, "%Y-%m-%dT%H:%M:%SZ")
+            self.last_commit_date = datetime.datetime.strptime(
+                self.last_commit_date, "%Y-%m-%dT%H:%M:%SZ")
+            # 2- format datetime
+            self.first_commit_date = self.first_commit_date.strftime(
+                "%Y-%m-%d")
+            self.last_commit_date = self.last_commit_date.strftime("%Y-%m-%d")
 
         return {
             "login": self.login,
             "contributions": self.contributions,
             "total": self.total,
-            "first_commit_date": first_commit_date,
-            "last_commit_date": last_commit_date,
+            "first_commit_date": self.first_commit_date,
+            "last_commit_date": self.last_commit_date,
             "avg_additions": self.avg_additions,
             "avg_deletions": self.avg_deletions,
             "avg_commits": self.avg_commits,
-            "active_week": active_week
+            "active_week": self.active_week
         }

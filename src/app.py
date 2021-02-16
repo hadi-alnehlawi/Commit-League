@@ -22,7 +22,6 @@ def create_app():
         "GITHUB_OAUTH_CLIENT_ID")
     app.config["GITHUB_OAUTH_CLIENT_SECRET"] = os.environ.get(
         "GITHUB_OAUTH_CLIENT_SECRET")
-    # github_bp = make_github_blueprint()
     app.register_blueprint(github_bp, url_prefix="/login")
     # setup db to store OAuth tokens
     setup_db(app, github_bp)
@@ -48,38 +47,32 @@ def create_app():
         return jsonify({"success": True, "body": body})
 
     def get_one_contributor(login):
-        # contributor_url = url + "/stats/contributors"
-        # contributor_resp = github.get(contributor_url)
-        if Repository.get_contribtuor_res().status_code == 400:
-            abort(400)
-        else:
-            contributor = Contributor(login=login, load_stats=True)
-            return jsonify({"success": True, "body": contributor.to_dict()})
+        contributor = Contributor(login=login, load_stats=True)
+        return jsonify({"success": True, "body": contributor.to_dict()})
 
     @app.route("/")
     @authorizing
     def index():
-        return render_template('index.html')
+        contribtuor_res = Repository.get_contribtuor_res()
+        if contribtuor_res.status_code == 404:
+            abort(404)
+        elif contribtuor_res.status_code == 403:
+            abort(403)
+        else:
+            return render_template('index.html')
 
     @app.route("/contributors")
     @authorizing
     def contributors_endpoint():
-        # resp_repo = github.get(url)
-        # resp_contrbtor = github.get(url+"/contributors")
-        repo = Repo()
-        if Repository.get_contribtuor_res().status_code == 404:
-            abort(404)
-        elif Repository.get_contribtuor_res().status_code == 403:
-            abort(403)
+        query_string = request.query_string
+        if not query_string:
+            # no query string
+            repo = Repo()
+            return get_all_contributors(repo)
         else:
-            query_string = request.query_string
-            if not query_string:
-                # no query string
-                return get_all_contributors(repo)
-            else:
-                # get login of query string
-                login = request.args.get('login')
-                return get_one_contributor(login=login)
+            # get login of query string
+            login = request.args.get('login')
+            return get_one_contributor(login=login)
 
     @app.route("/logout")
     def logout():
